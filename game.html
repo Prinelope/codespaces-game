@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smooth Emoji Snake Game</title>
     <style>
-        /* Basic styles for body and headings */
         body {
             font-family: 'Arial', sans-serif;
             background-color: #222;
@@ -16,13 +15,11 @@
         h1 {
             color: #ffcc00;
         }
-        /* Styles for score display */
         #score {
             font-size: 24px;
             color: #ffcc00;
             margin-bottom: 10px;
         }
-        /* Styles for the game canvas */
         canvas {
             display: block;
             margin: 0 auto;
@@ -30,47 +27,26 @@
             border: 2px solid #ffcc00;
             border-radius: 10px;
         }
-        /* Styles for emoji selection */
         .emoji {
             font-size: 48px;
             cursor: pointer;
         }
-        /* Style for emoji selection container */
         #emojiSelection {
             margin-bottom: 20px;
-        }
-        /* Styles for game over message */
-        #gameOver {
-            display: none; /* Hidden by default */
-            font-size: 48px;
-            animation: beat 0.5s infinite alternate; /* Animation for heart beating */
-        }
-        /* Keyframes for heart beating animation */
-        @keyframes beat {
-            0% { transform: scale(1); } /* Normal size */
-            100% { transform: scale(1.1); } /* Slightly larger */
         }
     </style>
 </head>
 <body>
     <h1>Smooth Emoji Snake Game</h1>
     <div id="emojiSelection">
-        <!-- Emoji selection buttons -->
         <span class="emoji" onclick="selectEmoji('🐍')">🐍</span>
         <span class="emoji" onclick="selectEmoji('🐉')">🐉</span>
     </div>
     <div id="score">Score: 0 | Level: 1</div>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
-    <div id="gameOver">
-        ❤️<br>
-        <h1>Thank you for playing! Love you so much!</h1>
-    </div>
     <script>
-        // Select canvas and context
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        
-        // Initialize game variables
         let score = 0;
         let level = 1;
         let snake = [{ x: 200, y: 200 }];
@@ -82,99 +58,89 @@
         let lastRenderTime = 0;
         const speed = 100; // Base speed in milliseconds
 
-        // Function to select emoji and hide selection
         function selectEmoji(emoji) {
-            snakeEmoji = emoji; // Set selected emoji
-            document.getElementById('emojiSelection').style.display = 'none'; // Hide emoji selection
-            init(); // Start the game
+            snakeEmoji = emoji;
+            document.getElementById('emojiSelection').style.display = 'none';
+            init();
         }
 
-        // Initialize game by generating food and starting the game loop
         function init() {
-            generateFood(); // Create initial food
-            requestAnimationFrame(gameLoop); // Start the game loop
+            generateFood();
+            requestAnimationFrame(gameLoop);
         }
 
-        // Generate random food position
         function generateFood() {
-            food.x = Math.floor(Math.random() * (canvas.width / 20)) * 20; // Random x position
-            food.y = Math.floor(Math.random() * (canvas.height / 20)) * 20; // Random y position
+            food.x = Math.floor(Math.random() * (canvas.width / 20)) * 20;
+            food.y = Math.floor(Math.random() * (canvas.height / 20)) * 20;
         }
 
-        // Main game loop function
         function gameLoop(timestamp) {
             if (gameOver) {
-                displayGameOver(); // Show game over screen if the game is over
-                return; // Exit the loop
+                alert('Game Over! Score: ' + score);
+                document.location.reload();
+                return;
             }
 
-            // Update the game state based on elapsed time
             if (timestamp - lastRenderTime >= speed - (level * 10)) { // Increase speed with level
-                updateSnake(); // Update snake position
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-                drawFood(); // Draw food
-                drawSnake(); // Draw snake
-                updateScoreDisplay(); // Update score display
-                lastRenderTime = timestamp; // Update last render time
+                updateSnake();
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawFood();
+                drawSnake();
+                updateScoreDisplay();
+                lastRenderTime = timestamp;
             }
 
-            // Draw fireworks and handle special effects for level 3
             if (level >= 3) {
-                drawFireworks(); // Draw fireworks
+                drawFireworks();
                 if (level === 3) {
-                    danceDragon(); // Optional: Implement dancing dragon logic
+                    danceDragon();
                 }
             }
 
-            requestAnimationFrame(gameLoop); // Request next frame
+            requestAnimationFrame(gameLoop);
         }
 
-        // Update snake position and check for collisions
         function updateSnake() {
-            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y }; // Create new head
-            snake.unshift(head); // Add new head to the snake
+            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+            snake.unshift(head);
 
             // Check for food collision
             if (head.x === food.x && head.y === food.y) {
-                score++; // Increase score
-                if (score % 5 === 0) levelUp(); // Level up every 5 points
-                generateFood(); // Generate new food
+                score++;
+                if (score % 5 === 0) levelUp();
+                generateFood();
             } else {
                 snake.pop(); // Remove the last segment if no food is eaten
             }
 
             // Check for collision with walls
             if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                gameOver = true; // Set game over flag
+                gameOver = true;
             }
         }
 
-        // Handle leveling up
         function levelUp() {
-            level++; // Increase level
-            alert(`Level Up! Welcome to Level ${level}`); // Notify player
+            level++;
+            alert(`Level Up! Welcome to Level ${level}`);
             if (level === 3) {
-                createFireworks(); // Trigger fireworks at level 3
+                createFireworks();
                 setTimeout(() => {
-                    alert('End of Level 3! 🎉'); // Notify end of level 3
+                    alert('End of Level 3! 🎉');
                 }, 1000);
             }
         }
 
-        // Draw the snake on the canvas
         function drawSnake() {
-            ctx.font = '20px Arial'; // Set font for snake
+            ctx.font = '20px Arial';
             snake.forEach(segment => {
-                ctx.fillText(snakeEmoji, segment.x, segment.y + 20); // Draw each segment
+                ctx.fillText(snakeEmoji, segment.x, segment.y + 20);
             });
         }
 
-        // Draw food on the canvas
         function drawFood() {
-            ctx.fillText('🍕', food.x, food.y + 20); // Draw food as a pizza emoji
+            ctx.fillText('🍕', food.x, food.y + 20); // Drawing food as a pizza emoji
         }
 
-        // Create fireworks for celebration
         function createFireworks() {
             for (let i = 0; i < 10; i++) {
                 fireworks.push({
@@ -187,65 +153,56 @@
             }
         }
 
-        // Draw fireworks on the canvas
         function drawFireworks() {
             fireworks.forEach(firework => {
-                ctx.fillStyle = 'rgba(255, 255, 0, 1)'; // Set color for fireworks
+                ctx.fillStyle = 'rgba(255, 255, 0, 1)';
                 ctx.beginPath();
-                ctx.arc(firework.x, firework.y, firework.explosionSize, 0, Math.PI * 2); // Draw explosion
+                ctx.arc(firework.x, firework.y, firework.explosionSize, 0, Math.PI * 2);
                 ctx.fill();
-                firework.y -= firework.speed; // Move firework upwards
-                if (firework.y < 0) firework.isActive = false; // Deactivate if off-screen
+                firework.y -= firework.speed;
+                if (firework.y < 0) firework.isActive = false;
             });
-            fireworks = fireworks.filter(firework => firework.isActive); // Remove inactive fireworks
+            fireworks = fireworks.filter(firework => firework.isActive);
         }
 
-        // Display the game over screen
-        function displayGameOver() {
-            canvas.style.display = 'none'; // Hide the game canvas
-            document.getElementById('emojiSelection').style.display = 'none'; // Hide emoji selection
-            document.getElementById('score').style.display = 'none'; // Hide score display
-            const gameOverDiv = document.getElementById('gameOver');
-            gameOverDiv.style.display = 'block'; // Show game over message
+        function danceDragon() {
+            // Implement your dancing dragon logic here if needed
         }
 
-        // Update score display
         function updateScoreDisplay() {
-            document.getElementById('score').innerText = `Score: ${score} | Level: ${level}`; // Display score and level
+            document.getElementById('score').innerText = `Score: ${score} | Level: ${level}`;
         }
 
-        // Handle keyboard input for snake direction
         window.addEventListener('keydown', (event) => {
             switch (event.key) {
                 case 'ArrowLeft':
-                    changeDirection('left'); // Change direction to left
+                    changeDirection('left');
                     break;
                 case 'ArrowRight':
-                    changeDirection('right'); // Change direction to right
+                    changeDirection('right');
                     break;
                 case 'ArrowUp':
-                    changeDirection('up'); // Change direction to up
+                    changeDirection('up');
                     break;
                 case 'ArrowDown':
-                    changeDirection('down'); // Change direction to down
+                    changeDirection('down');
                     break;
             }
         });
 
-        // Change the snake's direction
         function changeDirection(newDirection) {
             switch (newDirection) {
                 case 'left':
-                    if (direction.x === 0) direction = { x: -20, y: 0 }; // Prevent reversing
+                    if (direction.x === 0) direction = { x: -20, y: 0 };
                     break;
                 case 'right':
-                    if (direction.x === 0) direction = { x: 20, y: 0 }; // Prevent reversing
+                    if (direction.x === 0) direction = { x: 20, y: 0 };
                     break;
                 case 'up':
-                    if (direction.y === 0) direction = { x: 0, y: -20 }; // Prevent reversing
+                    if (direction.y === 0) direction = { x: 0, y: -20 };
                     break;
                 case 'down':
-                    if (direction.y === 0) direction = { x: 0, y: 20 }; // Prevent reversing
+                    if (direction.y === 0) direction = { x: 0, y: 20 };
                     break;
             }
         }
