@@ -165,9 +165,9 @@
 
         function levelUp() {
             level++;
-            alert(`Level Up! Welcome to Level ${level}`);
             generateObstacles();
             speed = Math.max(50, baseSpeed - level * 5); // Increase speed but not less than 50ms
+            // Removed alert notification for level up
         }
 
         function drawSnake() {
