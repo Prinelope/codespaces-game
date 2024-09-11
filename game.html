@@ -51,10 +51,10 @@
         let score = 0;
         let level = 1;
         let snake = [{ x: 200, y: 200 }];
-        let direction = { x: 20, y: 0 };
+        let direction = { x: 0, y: -20 }; // Start moving vertically up
         let food = { x: 0, y: 0 };
         let obstacles = [];
-        let movingObstacles = []; // Array for moving obstacles
+        let movingObstacles = [];
         let gameOver = false;
         let snakeEmoji = '🐍';
         let lastRenderTime = 0;
@@ -80,12 +80,14 @@
 
         function generateObstacles() {
             obstacles = [];
-            for (let i = 0; i < level; i++) {
-                let obstacle = {
-                    x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
-                    y: Math.floor(Math.random() * (canvas.height / 20)) * 20
-                };
-                obstacles.push(obstacle);
+            if (level >= 2) { // Generate obstacles only from level 2
+                for (let i = 0; i < level; i++) {
+                    let obstacle = {
+                        x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
+                        y: Math.floor(Math.random() * (canvas.height / 20)) * 20
+                    };
+                    obstacles.push(obstacle);
+                }
             }
             // Add moving obstacles starting from level 3
             if (level >= 3) {
@@ -96,7 +98,6 @@
                         y: Math.floor(Math.random() * (canvas.height / 20)) * 20,
                         direction: Math.random() < 0.5 ? 'horizontal' : 'vertical',
                         speed: Math.random() * 2 + 1, // Random speed
-                        moveDistance: 20 // Distance to move
                     });
                 }
             }
