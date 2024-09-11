@@ -47,31 +47,59 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+
         let score = 0;
         let level = 1;
         let snake = [{ x: 200, y: 200 }];
         let direction = { x: 20, y: 0 };
         let food = { x: 0, y: 0 };
+        let obstacles = [];
+        let movingObstacles = []; // Array for moving obstacles
         let gameOver = false;
         let snakeEmoji = '🐍';
-        let fireworks = [];
         let lastRenderTime = 0;
-        const speed = 100; // Base speed in milliseconds
+        const baseSpeed = 100; // Base speed in milliseconds
+        let speed = baseSpeed;
 
         function selectEmoji(emoji) {
             snakeEmoji = emoji;
             document.getElementById('emojiSelection').style.display = 'none';
-            init();
+            init(); // Start the game immediately after selecting an emoji
         }
 
         function init() {
             generateFood();
-            requestAnimationFrame(gameLoop);
+            generateObstacles();
+            requestAnimationFrame(gameLoop); // Start the game loop
         }
 
         function generateFood() {
             food.x = Math.floor(Math.random() * (canvas.width / 20)) * 20;
             food.y = Math.floor(Math.random() * (canvas.height / 20)) * 20;
+        }
+
+        function generateObstacles() {
+            obstacles = [];
+            for (let i = 0; i < level; i++) {
+                let obstacle = {
+                    x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
+                    y: Math.floor(Math.random() * (canvas.height / 20)) * 20
+                };
+                obstacles.push(obstacle);
+            }
+            // Add moving obstacles starting from level 3
+            if (level >= 3) {
+                movingObstacles = [];
+                for (let i = 0; i < level; i++) {
+                    movingObstacles.push({
+                        x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
+                        y: Math.floor(Math.random() * (canvas.height / 20)) * 20,
+                        direction: Math.random() < 0.5 ? 'horizontal' : 'vertical',
+                        speed: Math.random() * 2 + 1, // Random speed
+                        moveDistance: 20 // Distance to move
+                    });
+                }
+            }
         }
 
         function gameLoop(timestamp) {
@@ -81,20 +109,16 @@
                 return;
             }
 
-            if (timestamp - lastRenderTime >= speed - (level * 10)) { // Increase speed with level
+            if (timestamp - lastRenderTime >= speed) {
                 updateSnake();
+                updateMovingObstacles(); // Update moving obstacles
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 drawFood();
                 drawSnake();
+                drawObstacles();
+                drawMovingObstacles(); // Draw moving obstacles
                 updateScoreDisplay();
                 lastRenderTime = timestamp;
-            }
-
-            if (level >= 3) {
-                drawFireworks();
-                if (level === 3) {
-                    danceDragon();
-                }
             }
 
             requestAnimationFrame(gameLoop);
@@ -104,30 +128,45 @@
             const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
             snake.unshift(head);
 
-            // Check for food collision
             if (head.x === food.x && head.y === food.y) {
                 score++;
                 if (score % 5 === 0) levelUp();
                 generateFood();
             } else {
-                snake.pop(); // Remove the last segment if no food is eaten
+                snake.pop();
             }
 
-            // Check for collision with walls
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || checkCollisionWithObstacles(head)) {
                 gameOver = true;
             }
+        }
+
+        function updateMovingObstacles() {
+            movingObstacles.forEach(obstacle => {
+                if (obstacle.direction === 'horizontal') {
+                    obstacle.x += obstacle.speed;
+                    if (obstacle.x >= canvas.width || obstacle.x < 0) {
+                        obstacle.speed = -obstacle.speed; // Reverse direction
+                    }
+                } else {
+                    obstacle.y += obstacle.speed;
+                    if (obstacle.y >= canvas.height || obstacle.y < 0) {
+                        obstacle.speed = -obstacle.speed; // Reverse direction
+                    }
+                }
+            });
+        }
+
+        function checkCollisionWithObstacles(head) {
+            return obstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y) || 
+                   movingObstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y);
         }
 
         function levelUp() {
             level++;
             alert(`Level Up! Welcome to Level ${level}`);
-            if (level === 3) {
-                createFireworks();
-                setTimeout(() => {
-                    alert('End of Level 3! 🎉');
-                }, 1000);
-            }
+            generateObstacles();
+            speed = Math.max(50, baseSpeed - level * 5); // Increase speed but not less than 50ms
         }
 
         function drawSnake() {
@@ -138,35 +177,21 @@
         }
 
         function drawFood() {
-            ctx.fillText('🍕', food.x, food.y + 20); // Drawing food as a pizza emoji
+            ctx.fillText('🍕', food.x, food.y + 20);
         }
 
-        function createFireworks() {
-            for (let i = 0; i < 10; i++) {
-                fireworks.push({
-                    x: Math.random() * canvas.width,
-                    y: canvas.height,
-                    speed: Math.random() * 2 + 2,
-                    isActive: true,
-                    explosionSize: Math.random() * 20 + 10
-                });
-            }
-        }
-
-        function drawFireworks() {
-            fireworks.forEach(firework => {
-                ctx.fillStyle = 'rgba(255, 255, 0, 1)';
-                ctx.beginPath();
-                ctx.arc(firework.x, firework.y, firework.explosionSize, 0, Math.PI * 2);
-                ctx.fill();
-                firework.y -= firework.speed;
-                if (firework.y < 0) firework.isActive = false;
+        function drawObstacles() {
+            ctx.fillStyle = 'red'; // Color for static obstacles
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, 20, 20);
             });
-            fireworks = fireworks.filter(firework => firework.isActive);
         }
 
-        function danceDragon() {
-            // Implement your dancing dragon logic here if needed
+        function drawMovingObstacles() {
+            ctx.fillStyle = 'blue'; // Color for moving obstacles
+            movingObstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, 20, 20);
+            });
         }
 
         function updateScoreDisplay() {
