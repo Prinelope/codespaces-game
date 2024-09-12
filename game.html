@@ -12,26 +12,23 @@
             color: #fff; /* White text color */
             margin: 0; /* Remove default margin */
             text-align: center; /* Center-align text */
+            overflow: hidden; /* Prevent scrolling */
         }
         h1 {
             color: #ffcc00; /* Gold color for the heading */
         }
-        #score {
-            font-size: 24px; /* Larger font size for the score display */
-            color: #ffcc00; /* Gold color for the score */
-            margin-bottom: 10px; /* Space below the score */
-        }
-        #highScore {
-            font-size: 18px; /* Smaller font size for high score */
-            color: #ff9900; /* Slightly different color for high score */
-            margin-bottom: 20px; /* Space below high score */
+        #score, #highScore {
+            font-size: 24px; /* Font size for score and high score */
+            color: #ffcc00; /* Gold color for score displays */
+            margin-bottom: 10px; /* Space below score displays */
         }
         canvas {
             display: block; /* Make canvas a block element */
-            margin: 0 auto; /* Center the canvas horizontally */
+            margin: 0 auto; /* Center the canvas */
             background: #444; /* Dark gray background for canvas */
             border: 2px solid #ffcc00; /* Gold border for the canvas */
             border-radius: 10px; /* Rounded corners for aesthetics */
+            touch-action: none; /* Prevent default touch actions on mobile */
         }
         .emoji {
             font-size: 48px; /* Large size for emoji selection */
@@ -39,6 +36,13 @@
         }
         #emojiSelection {
             margin-bottom: 20px; /* Space below emoji selection */
+        }
+        /* Media query for smaller screens */
+        @media (max-width: 600px) {
+            canvas {
+                width: 90vw; /* Make canvas responsive on small screens */
+                height: auto; /* Maintain aspect ratio */
+            }
         }
     </style>
 </head>
@@ -286,6 +290,57 @@
                     break;
             }
         }
+
+        // Touch event handling for mobile controls
+        let isTouching = false; // Flag to track if the user is currently touching the canvas
+        let touchStartX, touchStartY; // Variables to store the starting touch position
+
+        // Start touch event
+        canvas.addEventListener('touchstart', (event) => {
+            event.preventDefault(); // Prevent default touch actions
+            isTouching = true; // Set the touching flag to true
+            touchStartX = event.touches[0].clientX; // Get the X position of the touch
+            touchStartY = event.touches[0].clientY; // Get the Y position of the touch
+        });
+
+        // Move touch event
+        canvas.addEventListener('touchmove', (event) => {
+            event.preventDefault(); // Prevent default touch actions
+            if (isTouching) {
+                const touchX = event.touches[0].clientX; // Get the new X position of the touch
+                const touchY = event.touches[0].clientY; // Get the new Y position of the touch
+
+                // Calculate the change in position
+                const deltaX = touchX - touchStartX; // Change in X position
+                const deltaY = touchY - touchStartY; // Change in Y position
+
+                // Determine the direction based on the largest delta
+                if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                    // Horizontal movement
+                    if (deltaX > 0) {
+                        changeDirection('right'); // Move right
+                    } else {
+                        changeDirection('left'); // Move left
+                    }
+                } else {
+                    // Vertical movement
+                    if (deltaY > 0) {
+                        changeDirection('down'); // Move down
+                    } else {
+                        changeDirection('up'); // Move up
+                    }
+                }
+
+                // Update the starting position for the next move
+                touchStartX = touchX;
+                touchStartY = touchY;
+            }
+        });
+
+        // End touch event
+        canvas.addEventListener('touchend', () => {
+            isTouching = false; // Reset the touching flag
+        });
     </script>
 </body>
 </html>
