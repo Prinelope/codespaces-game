@@ -5,230 +5,258 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choose Snakes vs Dragons</title>
     <style>
+        /* Basic styling for the body */
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #222;
-            color: #fff;
-            margin: 0;
-            text-align: center;
+            font-family: 'Arial', sans-serif; /* Font style */
+            background-color: #222; /* Dark background */
+            color: #fff; /* White text color */
+            margin: 0; /* Remove default margin */
+            text-align: center; /* Center text */
         }
         h1 {
-            color: #ffcc00;
+            color: #ffcc00; /* Gold color for the heading */
         }
         #score {
-            font-size: 24px;
-            color: #ffcc00;
-            margin-bottom: 10px;
+            font-size: 24px; /* Larger font for the score */
+            color: #ffcc00; /* Gold color for the score display */
+            margin-bottom: 10px; /* Space below the score */
         }
         canvas {
-            display: block;
-            margin: 0 auto;
-            background: #444;
-            border: 2px solid #ffcc00;
-            border-radius: 10px;
+            display: block; /* Make canvas a block element */
+            margin: 0 auto; /* Center the canvas */
+            background: #444; /* Dark gray background for canvas */
+            border: 2px solid #ffcc00; /* Gold border for the canvas */
+            border-radius: 10px; /* Rounded corners */
         }
         .emoji {
-            font-size: 48px;
-            cursor: pointer;
+            font-size: 48px; /* Large emoji size */
+            cursor: pointer; /* Change cursor to pointer on hover */
         }
         #emojiSelection {
-            margin-bottom: 20px;
+            margin-bottom: 20px; /* Space below emoji selection */
         }
     </style>
 </head>
 <body>
     <h1>Choose Snakes vs Dragons</h1>
     <div id="emojiSelection">
+        <!-- Emoji selection for the player -->
         <span class="emoji" onclick="selectEmoji('🐍')">🐍</span>
         <span class="emoji" onclick="selectEmoji('🐉')">🐉</span>
     </div>
     <div id="score">Score: 0 | Level: 1</div>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
     <script>
+        // Get canvas and context for drawing
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        let score = 0;
-        let level = 1;
-        let snake = [{ x: 200, y: 200 }];
-        let direction = { x: 0, y: -20 }; // Start moving vertically up
-        let food = { x: 0, y: 0 };
-        let obstacles = [];
-        let movingObstacles = [];
-        let gameOver = false;
-        let snakeEmoji = '🐍';
-        let lastRenderTime = 0;
+        // Game state variables
+        let score = 0; // Player's score
+        let level = 1; // Current game level
+        let snake = [{ x: 200, y: 200 }]; // Initial snake position
+        let direction = { x: 0, y: -20 }; // Initial movement direction (upwards)
+        let food = { x: 0, y: 0 }; // Food position
+        let obstacles = []; // Static obstacles
+        let movingObstacles = []; // Moving obstacles
+        let gameOver = false; // Game over flag
+        let snakeEmoji = '🐍'; // Default emoji for the snake
+        let lastRenderTime = 0; // Timestamp for the last frame
         const baseSpeed = 100; // Base speed in milliseconds
-        let speed = baseSpeed;
+        let speed = baseSpeed; // Current game speed
 
+        // Function to handle emoji selection
         function selectEmoji(emoji) {
-            snakeEmoji = emoji;
-            document.getElementById('emojiSelection').style.display = 'none';
-            init(); // Start the game immediately after selecting an emoji
+            snakeEmoji = emoji; // Set selected emoji
+            document.getElementById('emojiSelection').style.display = 'none'; // Hide emoji selection
+            init(); // Start the game
         }
 
+        // Initialize the game
         function init() {
-            generateFood();
-            generateObstacles();
+            generateFood(); // Generate initial food
+            generateObstacles(); // Generate initial obstacles
             requestAnimationFrame(gameLoop); // Start the game loop
         }
 
+        // Generate food at a random position
         function generateFood() {
-            food.x = Math.floor(Math.random() * (canvas.width / 20)) * 20;
-            food.y = Math.floor(Math.random() * (canvas.height / 20)) * 20;
+            food.x = Math.floor(Math.random() * (canvas.width / 20)) * 20; // Random X
+            food.y = Math.floor(Math.random() * (canvas.height / 20)) * 20; // Random Y
         }
 
+        // Generate static and moving obstacles based on the level
         function generateObstacles() {
-            obstacles = [];
-            if (level >= 2) { // Generate obstacles only from level 2
+            obstacles = []; // Reset obstacles
+            if (level >= 2) { // Create obstacles from level 2
                 for (let i = 0; i < level; i++) {
                     let obstacle = {
                         x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
                         y: Math.floor(Math.random() * (canvas.height / 20)) * 20
                     };
-                    obstacles.push(obstacle);
+                    obstacles.push(obstacle); // Add obstacle to the array
                 }
             }
             // Add moving obstacles starting from level 3
             if (level >= 3) {
-                movingObstacles = [];
-                for (let i = 0; i < level; i++) {
+                movingObstacles = []; // Reset moving obstacles
+                for (let i = 0; i < level * 2; i++) { // Increase number of moving obstacles
                     movingObstacles.push({
                         x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
                         y: Math.floor(Math.random() * (canvas.height / 20)) * 20,
-                        direction: Math.random() < 0.5 ? 'horizontal' : 'vertical',
-                        speed: Math.random() * 2 + 1, // Random speed
+                        direction: Math.random() < 0.5 ? 'horizontal' : 'vertical', // Random direction
+                        speed: Math.random() * 2 + 1, // Random speed between 1 and 3
                     });
                 }
             }
         }
 
+        // Main game loop
         function gameLoop(timestamp) {
             if (gameOver) {
-                alert('Game Over! Score: ' + score);
-                document.location.reload();
+                alert('Game Over! Score: ' + score); // Alert game over message
+                document.location.reload(); // Reload the page
                 return;
             }
 
+            // Update game state at the defined speed
             if (timestamp - lastRenderTime >= speed) {
-                updateSnake();
+                updateSnake(); // Update snake position
                 updateMovingObstacles(); // Update moving obstacles
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                drawFood();
-                drawSnake();
-                drawObstacles();
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+                drawFood(); // Draw food
+                drawSnake(); // Draw snake
+                drawObstacles(); // Draw static obstacles
                 drawMovingObstacles(); // Draw moving obstacles
-                updateScoreDisplay();
-                lastRenderTime = timestamp;
+                updateScoreDisplay(); // Update score display
+                lastRenderTime = timestamp; // Update last render time
             }
 
-            requestAnimationFrame(gameLoop);
+            requestAnimationFrame(gameLoop); // Request next frame
         }
 
+        // Update the snake's position
         function updateSnake() {
-            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
-            snake.unshift(head);
+            const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y }; // Calculate new head position
+            snake.unshift(head); // Add new head to the snake
 
+            // Wrap around the canvas edges
+            if (head.x < 0) head.x = canvas.width - 20; // Wrap left
+            else if (head.x >= canvas.width) head.x = 0; // Wrap right
+            if (head.y < 0) head.y = canvas.height - 20; // Wrap top
+            else if (head.y >= canvas.height) head.y = 0; // Wrap bottom
+
+            // Check if the snake has eaten the food
             if (head.x === food.x && head.y === food.y) {
-                score++;
-                if (score % 5 === 0) levelUp();
-                generateFood();
+                score++; // Increase score
+                if (score % 5 === 0) levelUp(); // Level up every 5 points
+                generateFood(); // Generate new food
             } else {
-                snake.pop();
+                snake.pop(); // Remove tail segment if not eating
             }
 
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || checkCollisionWithObstacles(head)) {
-                gameOver = true;
+            // Check for collisions with obstacles
+            if (checkCollisionWithObstacles(head)) {
+                gameOver = true; // Set game over flag
             }
         }
 
+        // Update the positions of moving obstacles
         function updateMovingObstacles() {
             movingObstacles.forEach(obstacle => {
                 if (obstacle.direction === 'horizontal') {
-                    obstacle.x += obstacle.speed;
+                    obstacle.x += obstacle.speed; // Move horizontally
                     if (obstacle.x >= canvas.width || obstacle.x < 0) {
-                        obstacle.speed = -obstacle.speed; // Reverse direction
+                        obstacle.speed = -obstacle.speed; // Reverse direction if out of bounds
                     }
                 } else {
-                    obstacle.y += obstacle.speed;
+                    obstacle.y += obstacle.speed; // Move vertically
                     if (obstacle.y >= canvas.height || obstacle.y < 0) {
-                        obstacle.speed = -obstacle.speed; // Reverse direction
+                        obstacle.speed = -obstacle.speed; // Reverse direction if out of bounds
                     }
                 }
             });
         }
 
+        // Check for collisions with any obstacles
         function checkCollisionWithObstacles(head) {
             return obstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y) || 
                    movingObstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y);
         }
 
+        // Level up function
         function levelUp() {
-            level++;
-            generateObstacles();
-            speed = Math.max(50, baseSpeed - level * 5); // Increase speed but not less than 50ms
-            // Removed alert notification for level up
+            level++; // Increase level
+            generateObstacles(); // Generate new obstacles
+            speed = Math.max(50, baseSpeed - level * 5); // Increase speed, but not below 50ms
         }
 
+        // Draw the snake on the canvas
         function drawSnake() {
-            ctx.font = '20px Arial';
+            ctx.font = '20px Arial'; // Set font for snake
             snake.forEach(segment => {
-                ctx.fillText(snakeEmoji, segment.x, segment.y + 20);
+                ctx.fillText(snakeEmoji, segment.x, segment.y + 20); // Draw each segment
             });
         }
 
+        // Draw food on the canvas
         function drawFood() {
-            ctx.fillText('🍕', food.x, food.y + 20);
+            ctx.fillText('🍕', food.x, food.y + 20); // Draw food emoji
         }
 
+        // Draw static obstacles on the canvas
         function drawObstacles() {
-            ctx.fillStyle = 'red'; // Color for static obstacles
+            ctx.fillStyle = 'red'; // Set color for static obstacles
             obstacles.forEach(obstacle => {
-                ctx.fillRect(obstacle.x, obstacle.y, 20, 20);
+                ctx.fillRect(obstacle.x, obstacle.y, 20, 20); // Draw each static obstacle
             });
         }
 
+        // Draw moving obstacles on the canvas
         function drawMovingObstacles() {
-            ctx.fillStyle = 'blue'; // Color for moving obstacles
+            ctx.fillStyle = 'blue'; // Set color for moving obstacles
             movingObstacles.forEach(obstacle => {
-                ctx.fillRect(obstacle.x, obstacle.y, 20, 20);
+                ctx.fillRect(obstacle.x, obstacle.y, 20, 20); // Draw each moving obstacle
             });
         }
 
+        // Update the score display
         function updateScoreDisplay() {
-            document.getElementById('score').innerText = `Score: ${score} | Level: ${level}`;
+            document.getElementById('score').innerText = `Score: ${score} | Level: ${level}`; // Update score text
         }
 
+        // Handle keyboard input for controlling the snake
         window.addEventListener('keydown', (event) => {
             switch (event.key) {
                 case 'ArrowLeft':
-                    changeDirection('left');
+                    changeDirection('left'); // Change direction to left
                     break;
                 case 'ArrowRight':
-                    changeDirection('right');
+                    changeDirection('right'); // Change direction to right
                     break;
                 case 'ArrowUp':
-                    changeDirection('up');
+                    changeDirection('up'); // Change direction to up
                     break;
                 case 'ArrowDown':
-                    changeDirection('down');
+                    changeDirection('down'); // Change direction to down
                     break;
             }
         });
 
+        // Change snake direction based on input
         function changeDirection(newDirection) {
             switch (newDirection) {
                 case 'left':
-                    if (direction.x === 0) direction = { x: -20, y: 0 };
+                    if (direction.x === 0) direction = { x: -20, y: 0 }; // Move left if not already moving horizontally
                     break;
                 case 'right':
-                    if (direction.x === 0) direction = { x: 20, y: 0 };
+                    if (direction.x === 0) direction = { x: 20, y: 0 }; // Move right if not already moving horizontally
                     break;
                 case 'up':
-                    if (direction.y === 0) direction = { x: 0, y: -20 };
+                    if (direction.y === 0) direction = { x: 0, y: -20 }; // Move up if not already moving vertically
                     break;
                 case 'down':
-                    if (direction.y === 0) direction = { x: 0, y: 20 };
+                    if (direction.y === 0) direction = { x: 0, y: 20 }; // Move down if not already moving vertically
                     break;
             }
         }
