@@ -1,35 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Choose Snakes vs Dragons</title>
+    <meta charset="UTF-8"> <!-- Character encoding for the document -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive design -->
+    <title>Choose Snakes vs Dragons</title> <!-- Title of the webpage -->
     <style>
         /* Basic styling for the body */
         body {
-            font-family: 'Arial', sans-serif; /* Font style */
-            background-color: #222; /* Dark background */
+            font-family: 'Arial', sans-serif; /* Set font style for the body */
+            background-color: #222; /* Dark background color */
             color: #fff; /* White text color */
             margin: 0; /* Remove default margin */
-            text-align: center; /* Center text */
+            text-align: center; /* Center-align text */
         }
         h1 {
             color: #ffcc00; /* Gold color for the heading */
         }
         #score {
-            font-size: 24px; /* Larger font for the score */
-            color: #ffcc00; /* Gold color for the score display */
+            font-size: 24px; /* Larger font size for the score display */
+            color: #ffcc00; /* Gold color for the score */
             margin-bottom: 10px; /* Space below the score */
+        }
+        #highScore {
+            font-size: 18px; /* Smaller font size for high score */
+            color: #ff9900; /* Slightly different color for high score */
+            margin-bottom: 20px; /* Space below high score */
         }
         canvas {
             display: block; /* Make canvas a block element */
-            margin: 0 auto; /* Center the canvas */
+            margin: 0 auto; /* Center the canvas horizontally */
             background: #444; /* Dark gray background for canvas */
             border: 2px solid #ffcc00; /* Gold border for the canvas */
-            border-radius: 10px; /* Rounded corners */
+            border-radius: 10px; /* Rounded corners for aesthetics */
         }
         .emoji {
-            font-size: 48px; /* Large emoji size */
+            font-size: 48px; /* Large size for emoji selection */
             cursor: pointer; /* Change cursor to pointer on hover */
         }
         #emojiSelection {
@@ -38,73 +43,80 @@
     </style>
 </head>
 <body>
-    <h1>Choose Snakes vs Dragons</h1>
+    <h1>Choose Snakes vs Dragons</h1> <!-- Main title of the game -->
     <div id="emojiSelection">
         <!-- Emoji selection for the player -->
-        <span class="emoji" onclick="selectEmoji('🐍')">🐍</span>
-        <span class="emoji" onclick="selectEmoji('🐉')">🐉</span>
+        <span class="emoji" onclick="selectEmoji('🐍')">🐍</span> <!-- Snake emoji -->
+        <span class="emoji" onclick="selectEmoji('🐉')">🐉</span> <!-- Dragon emoji -->
     </div>
-    <div id="score">Score: 0 | Level: 1</div>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Score: 0 | Level: 1</div> <!-- Initial score display -->
+    <div id="highScore">High Score: 0</div> <!-- High score display -->
+    <canvas id="gameCanvas" width="400" height="400"></canvas> <!-- Canvas for game rendering -->
     <script>
-        // Get canvas and context for drawing
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        // Get canvas element and context for drawing
+        const canvas = document.getElementById('gameCanvas'); // Access the canvas element
+        const ctx = canvas.getContext('2d'); // Get the 2D drawing context
 
         // Game state variables
-        let score = 0; // Player's score
+        let score = 0; // Player's current score
+        let highScore = localStorage.getItem('highScore') ? parseInt(localStorage.getItem('highScore')) : 0; // Load high score from localStorage or set to 0
         let level = 1; // Current game level
-        let snake = [{ x: 200, y: 200 }]; // Initial snake position
+        let snake = [{ x: 200, y: 200 }]; // Initial position of the snake
         let direction = { x: 0, y: -20 }; // Initial movement direction (upwards)
         let food = { x: 0, y: 0 }; // Food position
-        let obstacles = []; // Static obstacles
-        let movingObstacles = []; // Moving obstacles
-        let gameOver = false; // Game over flag
+        let obstacles = []; // Array to store static obstacles
+        let movingObstacles = []; // Array to store moving obstacles
+        let gameOver = false; // Flag to indicate if the game is over
         let snakeEmoji = '🐍'; // Default emoji for the snake
-        let lastRenderTime = 0; // Timestamp for the last frame
-        const baseSpeed = 100; // Base speed in milliseconds
+        let lastRenderTime = 0; // Timestamp for the last frame rendered
+        const baseSpeed = 100; // Base speed in milliseconds for the game loop
         let speed = baseSpeed; // Current game speed
 
         // Function to handle emoji selection
         function selectEmoji(emoji) {
-            snakeEmoji = emoji; // Set selected emoji
-            document.getElementById('emojiSelection').style.display = 'none'; // Hide emoji selection
+            snakeEmoji = emoji; // Set selected emoji for the snake
+            document.getElementById('emojiSelection').style.display = 'none'; // Hide emoji selection after choosing
             init(); // Start the game
         }
 
         // Initialize the game
         function init() {
-            generateFood(); // Generate initial food
-            generateObstacles(); // Generate initial obstacles
+            score = 0; // Reset current score to 0
+            level = 1; // Reset level to 1
+            snake = [{ x: 200, y: 200 }]; // Reset snake position
+            direction = { x: 0, y: -20 }; // Reset direction to upwards
+            generateFood(); // Generate initial food for the snake
+            generateObstacles(); // Generate initial obstacles based on the level
             requestAnimationFrame(gameLoop); // Start the game loop
+            updateHighScoreDisplay(); // Update the displayed high score
         }
 
         // Generate food at a random position
         function generateFood() {
-            food.x = Math.floor(Math.random() * (canvas.width / 20)) * 20; // Random X
-            food.y = Math.floor(Math.random() * (canvas.height / 20)) * 20; // Random Y
+            food.x = Math.floor(Math.random() * (canvas.width / 20)) * 20; // Random X position
+            food.y = Math.floor(Math.random() * (canvas.height / 20)) * 20; // Random Y position
         }
 
-        // Generate static and moving obstacles based on the level
+        // Generate static and moving obstacles based on the current level
         function generateObstacles() {
-            obstacles = []; // Reset obstacles
-            if (level >= 2) { // Create obstacles from level 2
-                for (let i = 0; i < level; i++) {
+            obstacles = []; // Reset obstacles array
+            if (level >= 2) { // Only generate obstacles if level is 2 or higher
+                for (let i = 0; i < level; i++) { // Create obstacles based on the current level
                     let obstacle = {
-                        x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
-                        y: Math.floor(Math.random() * (canvas.height / 20)) * 20
+                        x: Math.floor(Math.random() * (canvas.width / 20)) * 20, // Random X position for obstacle
+                        y: Math.floor(Math.random() * (canvas.height / 20)) * 20 // Random Y position for obstacle
                     };
-                    obstacles.push(obstacle); // Add obstacle to the array
+                    obstacles.push(obstacle); // Add the obstacle to the array
                 }
             }
             // Add moving obstacles starting from level 3
             if (level >= 3) {
-                movingObstacles = []; // Reset moving obstacles
-                for (let i = 0; i < level * 2; i++) { // Increase number of moving obstacles
+                movingObstacles = []; // Reset moving obstacles array
+                for (let i = 0; i < level * 2; i++) { // Increase the number of moving obstacles based on the level
                     movingObstacles.push({
-                        x: Math.floor(Math.random() * (canvas.width / 20)) * 20,
-                        y: Math.floor(Math.random() * (canvas.height / 20)) * 20,
-                        direction: Math.random() < 0.5 ? 'horizontal' : 'vertical', // Random direction
+                        x: Math.floor(Math.random() * (canvas.width / 20)) * 20, // Random X position
+                        y: Math.floor(Math.random() * (canvas.height / 20)) * 20, // Random Y position
+                        direction: Math.random() < 0.5 ? 'horizontal' : 'vertical', // Randomly assign direction
                         speed: Math.random() * 2 + 1, // Random speed between 1 and 3
                     });
                 }
@@ -113,38 +125,44 @@
 
         // Main game loop
         function gameLoop(timestamp) {
-            if (gameOver) {
-                alert('Game Over! Score: ' + score); // Alert game over message
-                document.location.reload(); // Reload the page
-                return;
+            if (gameOver) { // Check if the game is over
+                // Check for high score and update if necessary
+                if (score > highScore) {
+                    highScore = score; // Update high score if current score is higher
+                    localStorage.setItem('highScore', highScore); // Save high score to localStorage
+                }
+                updateHighScoreDisplay(); // Update the displayed high score
+                alert('Game Over! Score: ' + score); // Alert the player with their score
+                document.location.reload(); // Reload the page to restart the game
+                return; // Exit the game loop
             }
 
             // Update game state at the defined speed
             if (timestamp - lastRenderTime >= speed) {
-                updateSnake(); // Update snake position
-                updateMovingObstacles(); // Update moving obstacles
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-                drawFood(); // Draw food
-                drawSnake(); // Draw snake
-                drawObstacles(); // Draw static obstacles
-                drawMovingObstacles(); // Draw moving obstacles
-                updateScoreDisplay(); // Update score display
-                lastRenderTime = timestamp; // Update last render time
+                updateSnake(); // Update the position of the snake
+                updateMovingObstacles(); // Update the positions of moving obstacles
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas for redrawing
+                drawFood(); // Draw food on the canvas
+                drawSnake(); // Draw the snake on the canvas
+                drawObstacles(); // Draw static obstacles on the canvas
+                drawMovingObstacles(); // Draw moving obstacles on the canvas
+                updateScoreDisplay(); // Update the score display
+                lastRenderTime = timestamp; // Update the last render time
             }
 
-            requestAnimationFrame(gameLoop); // Request next frame
+            requestAnimationFrame(gameLoop); // Request the next frame for the game loop
         }
 
         // Update the snake's position
         function updateSnake() {
             const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y }; // Calculate new head position
-            snake.unshift(head); // Add new head to the snake
+            snake.unshift(head); // Add new head to the front of the snake
 
             // Wrap around the canvas edges
-            if (head.x < 0) head.x = canvas.width - 20; // Wrap left
-            else if (head.x >= canvas.width) head.x = 0; // Wrap right
-            if (head.y < 0) head.y = canvas.height - 20; // Wrap top
-            else if (head.y >= canvas.height) head.y = 0; // Wrap bottom
+            if (head.x < 0) head.x = canvas.width - 20; // Wrap left edge
+            else if (head.x >= canvas.width) head.x = 0; // Wrap right edge
+            if (head.y < 0) head.y = canvas.height - 20; // Wrap top edge
+            else if (head.y >= canvas.height) head.y = 0; // Wrap bottom edge
 
             // Check if the snake has eaten the food
             if (head.x === food.x && head.y === food.y) {
@@ -152,7 +170,7 @@
                 if (score % 5 === 0) levelUp(); // Level up every 5 points
                 generateFood(); // Generate new food
             } else {
-                snake.pop(); // Remove tail segment if not eating
+                snake.pop(); // Remove the tail segment if not eating
             }
 
             // Check for collisions with obstacles
@@ -165,14 +183,16 @@
         function updateMovingObstacles() {
             movingObstacles.forEach(obstacle => {
                 if (obstacle.direction === 'horizontal') {
-                    obstacle.x += obstacle.speed; // Move horizontally
+                    obstacle.x += obstacle.speed; // Move obstacle horizontally
+                    // Reverse direction if out of canvas bounds
                     if (obstacle.x >= canvas.width || obstacle.x < 0) {
-                        obstacle.speed = -obstacle.speed; // Reverse direction if out of bounds
+                        obstacle.speed = -obstacle.speed; // Reverse horizontal direction
                     }
                 } else {
-                    obstacle.y += obstacle.speed; // Move vertically
+                    obstacle.y += obstacle.speed; // Move obstacle vertically
+                    // Reverse direction if out of canvas bounds
                     if (obstacle.y >= canvas.height || obstacle.y < 0) {
-                        obstacle.speed = -obstacle.speed; // Reverse direction if out of bounds
+                        obstacle.speed = -obstacle.speed; // Reverse vertical direction
                     }
                 }
             });
@@ -180,35 +200,36 @@
 
         // Check for collisions with any obstacles
         function checkCollisionWithObstacles(head) {
+            // Check if the snake's head collides with any static or moving obstacle
             return obstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y) || 
                    movingObstacles.some(obstacle => head.x === obstacle.x && head.y === obstacle.y);
         }
 
         // Level up function
         function levelUp() {
-            level++; // Increase level
-            generateObstacles(); // Generate new obstacles
+            level++; // Increment the level
+            generateObstacles(); // Generate new obstacles for the new level
             speed = Math.max(50, baseSpeed - level * 5); // Increase speed, but not below 50ms
         }
 
         // Draw the snake on the canvas
         function drawSnake() {
-            ctx.font = '20px Arial'; // Set font for snake
+            ctx.font = '20px Arial'; // Set font for the snake emoji
             snake.forEach(segment => {
-                ctx.fillText(snakeEmoji, segment.x, segment.y + 20); // Draw each segment
+                ctx.fillText(snakeEmoji, segment.x, segment.y + 20); // Draw each segment of the snake
             });
         }
 
         // Draw food on the canvas
         function drawFood() {
-            ctx.fillText('🍕', food.x, food.y + 20); // Draw food emoji
+            ctx.fillText('🍕', food.x, food.y + 20); // Draw food emoji at the food's position
         }
 
         // Draw static obstacles on the canvas
         function drawObstacles() {
             ctx.fillStyle = 'red'; // Set color for static obstacles
             obstacles.forEach(obstacle => {
-                ctx.fillRect(obstacle.x, obstacle.y, 20, 20); // Draw each static obstacle
+                ctx.fillRect(obstacle.x, obstacle.y, 20, 20); // Draw each static obstacle as a rectangle
             });
         }
 
@@ -216,13 +237,18 @@
         function drawMovingObstacles() {
             ctx.fillStyle = 'blue'; // Set color for moving obstacles
             movingObstacles.forEach(obstacle => {
-                ctx.fillRect(obstacle.x, obstacle.y, 20, 20); // Draw each moving obstacle
+                ctx.fillRect(obstacle.x, obstacle.y, 20, 20); // Draw each moving obstacle as a rectangle
             });
         }
 
         // Update the score display
         function updateScoreDisplay() {
-            document.getElementById('score').innerText = `Score: ${score} | Level: ${level}`; // Update score text
+            document.getElementById('score').innerText = `Score: ${score} | Level: ${level}`; // Update score text on the display
+        }
+
+        // Update the high score display
+        function updateHighScoreDisplay() {
+            document.getElementById('highScore').innerText = `High Score: ${highScore}`; // Display the high score
         }
 
         // Handle keyboard input for controlling the snake
